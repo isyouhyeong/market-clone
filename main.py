@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from typing import Annotated
 import sqlite3
 
@@ -34,12 +35,14 @@ async def create_item(
 
 @app.get("/items")
 async def get_items():
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
     rows = cur.execute(
         f"""
                        SELECT * FROM items;
                        """
     ).fetchall()
-    return JSONResponse
+    return JSONResponse(jsonable_encoder(dict(row) for row in rows))
 
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
